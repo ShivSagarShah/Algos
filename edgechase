@@ -1,0 +1,311 @@
+Write a program to implement edge chasing distributed deadlock detection algorithm.
+
+ 
+
+#include <iostream>
+
+#include <vector>
+
+#include <string>
+
+#include <queue>
+
+#include <stdio.h>
+
+ 
+
+using namespace std;
+
+ 
+
+class Process
+
+{
+
+public:
+
+    int site;
+
+    int process_id;
+
+    Process(int s, int p)
+
+    {
+
+        this->site = s;
+
+        this->process_id = p;
+
+    }
+
+    string display()
+
+    {
+
+        return "S(" + to_string(site) + ")P(" + to_string(process_id) + ")";
+
+    }
+
+ 
+
+};
+
+ 
+
+void detectDeadlock(vector<std::vector<int>> &wfg, int init, int dest);
+
+ 
+
+void displayGraph(vector<vector<int>> wfg);
+
+ 
+
+int no_proccesses;
+
+vector<Process> processes;
+
+string probe;
+
+bool deadlock_flag = 0;
+
+ 
+
+int main()
+
+{
+
+ 
+
+    int starting_index;
+
+    cout << "Enter the number of processes : ";
+
+    cin >> no_proccesses;
+
+    cout << "Enter the site number and process id :-" << endl;
+
+    for (int i = 0; i < no_proccesses; i++)
+
+    {
+
+        int st, ps;
+
+        cin >> st >> ps;
+
+        processes.push_back(Process(st, ps));
+
+    }
+
+    if (no_proccesses > 1)
+
+    {
+
+        cout << "\nEnter the wait-for graph" << endl;
+
+        vector<vector<int>> wfg(no_proccesses);
+
+        for (int from = 0; from < no_proccesses; from++)
+
+        {
+
+            for (int to = 0; to < no_proccesses; to++)
+
+            {
+
+                int temp;
+
+                cin >> temp;
+
+                wfg[from].push_back(temp);
+
+            }
+
+        }
+
+ 
+
+        cout << endl;
+
+        cout << "The wait-for graph is " << endl
+
+             << endl;
+
+        displayGraph(wfg);
+
+        cout << endl;
+
+        int pid;
+
+        cout << "Enter the proccess initiating" << endl;
+
+        cin >> pid;
+
+        cout << endl;
+
+        int starting_index=0;
+
+        for(int i=0;i<no_proccesses;i++){
+
+            if(processes[i].process_id==pid){
+
+                starting_index=i;
+
+            }
+
+        }
+
+ 
+
+        cout << "DIRECTION"
+
+             << "\t\t    "
+
+             << " PROBE" << endl;
+
+        for (int col = 0; col < no_proccesses; col++)
+
+        {
+
+            if (wfg[starting_index][col] == 1)
+
+            {
+
+                cout << processes[starting_index].display() << " --> " << processes[col].display();
+
+                if (processes[starting_index].site != processes[col].site)
+
+                {
+
+                    probe = "(" + to_string(processes[starting_index].process_id) + "," + to_string(processes[starting_index].process_id) + "," + to_string(processes[col].process_id) + ")";
+
+                }
+
+                cout<<"\t    "<<probe<<endl;
+
+                detectDeadlock(wfg, starting_index, col);
+
+            }
+
+        }
+
+    }
+
+    else
+
+    {
+
+        cout << "No proccess running in the system" << endl;
+
+    }
+
+ 
+
+    return 0;
+
+}
+
+ 
+
+void displayGraph(vector<vector<int>> wfg)
+
+{
+
+    int n = wfg[0].size();
+
+    int m = wfg.size();
+
+ 
+
+    cout << "\t  ";
+
+    for (int j = 0; j < m; j++)
+
+    {
+
+        cout << processes[j].display()<<"  ";
+
+    }
+
+    cout << endl;
+
+    for (int i = 0; i < m; i++)
+
+    {
+
+        cout << processes[i].display()<<"     ";
+
+        for (int j = 0; j < n; j++)
+
+        {
+
+            cout << wfg[i][j] << "         ";
+
+        }
+
+        cout << "\n";
+
+    }
+
+}
+
+ 
+
+void detectDeadlock(vector<std::vector<int>> &wfg, int init, int dest)
+
+{
+
+    int end = no_proccesses;
+
+    for (int col = 0; col < end; col++)
+
+    {
+
+        if (wfg[dest][col] == 1)
+
+        {
+
+            if (init == col)
+
+            {
+
+ 
+
+                cout << processes[dest].display() << " --> " << processes[col].display();
+
+                if (processes[dest].site != processes[col].site)
+
+                {
+
+                    probe = "(" + to_string(init + 1) + "," + to_string(dest + 1) + "," + to_string(col + 1) + ")";
+
+                }
+
+                cout <<"\t    "<<probe;
+
+                cout << " -------- DEADLOCK DETECTED" << endl;
+
+                deadlock_flag = 1;
+
+                break;
+
+            }
+
+            cout << processes[dest].display() << " --> " << processes[col].display();
+
+            if (processes[dest].site != processes[col].site)
+
+            {
+
+                probe = "(" + to_string(init + 1) + "," + to_string(dest + 1) + "," + to_string(col + 1) + ")";
+
+            }
+
+            cout<<"\t    "<<probe<<endl;
+
+            detectDeadlock(wfg, init, col);
+
+        }
+
+    }
+
+}
